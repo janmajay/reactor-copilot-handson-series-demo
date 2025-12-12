@@ -150,16 +150,6 @@
   max-width: 150px;
 }
 
-.timeline-connector {
-  position: absolute;
-  top: 35px;
-  left: calc(50% + 35px);
-  right: calc(50% + 35px);
-  height: 4px;
-  background-color: #ddd;
-  z-index: 1;
-}
-
 .timeline-step:not(:last-child)::after {
   content: '';
   position: absolute;
@@ -172,10 +162,6 @@
 }
 
 .timeline-step.completed:not(:last-child)::after {
-  background-color: #000;
-}
-
-.timeline-connector.completed {
   background-color: #000;
 }
 

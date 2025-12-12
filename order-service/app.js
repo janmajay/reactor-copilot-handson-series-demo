@@ -3,6 +3,15 @@ const cors = require('cors');
 
 const app = express();
 
+// Constants for order statuses
+const ORDER_STATUS = {
+  PENDING: 'pending',
+  PROCESSING: 'processing',
+  SHIPPED: 'shipped',
+  DELIVERED: 'delivered',
+  CANCELLED: 'cancelled'
+};
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -53,8 +62,9 @@ const validateOrder = (order) => {
     });
   }
   
-  if (order.status && !['pending', 'processing', 'shipped', 'delivered', 'cancelled'].includes(order.status)) {
-    errors.push('status must be one of: pending, processing, shipped, delivered, cancelled');
+  const validStatuses = Object.values(ORDER_STATUS);
+  if (order.status && !validStatuses.includes(order.status)) {
+    errors.push(`status must be one of: ${validStatuses.join(', ')}`);
   }
   
   return errors;
@@ -84,7 +94,7 @@ app.post('/orders', (req, res) => {
       });
     }
 
-    const initialStatus = req.body.status || 'pending';
+    const initialStatus = req.body.status || ORDER_STATUS.PENDING;
     const timestamp = new Date().toISOString();
     
     const order = {

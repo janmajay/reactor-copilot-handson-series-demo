@@ -1,6 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './OrderTracking.css';
 
+// Constants for order statuses
+const ORDER_STATUS = {
+  PENDING: 'pending',
+  PROCESSING: 'processing',
+  SHIPPED: 'shipped',
+  DELIVERED: 'delivered',
+  CANCELLED: 'cancelled'
+};
+
+const STATUS_ORDER = [
+  ORDER_STATUS.PENDING,
+  ORDER_STATUS.PROCESSING,
+  ORDER_STATUS.SHIPPED,
+  ORDER_STATUS.DELIVERED
+];
+
 const OrderTracking = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10,8 +26,6 @@ const OrderTracking = () => {
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
   const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8000';
 
-  const statusOrder = ['pending', 'processing', 'shipped', 'delivered'];
-
   const getStatusTimestamp = (order, status) => {
     if (!order.statusHistory) return null;
     const historyItem = order.statusHistory.find(h => h.status === status);
@@ -19,8 +33,8 @@ const OrderTracking = () => {
   };
 
   const getStatusProgress = (status) => {
-    const index = statusOrder.indexOf(status);
-    if (status === 'cancelled') {
+    const index = STATUS_ORDER.indexOf(status);
+    if (status === ORDER_STATUS.CANCELLED) {
       return -1; // Special case for cancelled
     }
     return index;
@@ -139,7 +153,7 @@ const OrderTracking = () => {
               <h3 className="order-number-title">Order Number: {order.id}</h3>
               
               <div className="order-timeline">
-                {order.status === 'cancelled' ? (
+                {order.status === ORDER_STATUS.CANCELLED ? (
                   <div className="timeline-cancelled">
                     <div className="timeline-step cancelled-step">
                       <div className="step-icon">✕</div>
@@ -148,7 +162,7 @@ const OrderTracking = () => {
                   </div>
                 ) : (
                   <div className="timeline-steps">
-                    {statusOrder.map((status, index) => {
+                    {STATUS_ORDER.map((status, index) => {
                       const currentProgress = getStatusProgress(order.status);
                       const isCompleted = index <= currentProgress;
                       const isCurrent = index === currentProgress;
@@ -174,7 +188,7 @@ const OrderTracking = () => {
                               </div>
                             )}
                           </div>
-                          {index < statusOrder.length - 1 && (
+                          {index < STATUS_ORDER.length - 1 && (
                             <div className={`timeline-connector ${isCompleted && index < currentProgress ? 'completed' : ''}`}></div>
                           )}
                         </React.Fragment>
