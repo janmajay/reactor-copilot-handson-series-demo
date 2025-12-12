@@ -3,6 +3,15 @@ const cors = require('cors');
 
 const app = express();
 
+// Constants for order statuses
+const ORDER_STATUS = {
+  PENDING: 'pending',
+  PROCESSING: 'processing',
+  SHIPPED: 'shipped',
+  DELIVERED: 'delivered',
+  CANCELLED: 'cancelled'
+};
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -53,8 +62,9 @@ const validateOrder = (order) => {
     });
   }
   
-  if (order.status && !['pending', 'processing', 'shipped', 'delivered', 'cancelled'].includes(order.status)) {
-    errors.push('status must be one of: pending, processing, shipped, delivered, cancelled');
+  const validStatuses = Object.values(ORDER_STATUS);
+  if (order.status && !validStatuses.includes(order.status)) {
+    errors.push(`status must be one of: ${validStatuses.join(', ')}`);
   }
   
   return errors;
@@ -84,14 +94,23 @@ app.post('/orders', (req, res) => {
       });
     }
 
+    const initialStatus = req.body.status || ORDER_STATUS.PENDING;
+    const timestamp = new Date().toISOString();
+    
     const order = {
       id: nextOrderId++,
       customerId: req.body.customerId,
       items: req.body.items,
-      status: req.body.status || 'pending',
+      status: initialStatus,
       total: calculateTotal(req.body.items),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      statusHistory: [
+        {
+          status: initialStatus,
+          timestamp: timestamp
+        }
+      ],
+      createdAt: timestamp,
+      updatedAt: timestamp
     };
 
     orders.push(order);
@@ -176,13 +195,30 @@ app.put('/orders/:id', (req, res) => {
       });
     }
 
+    const timestamp = new Date().toISOString();
+    const newStatus = req.body.status || orders[orderIndex].status;
+    const oldStatus = orders[orderIndex].status;
+    
+    // Update status history if status changed
+    let statusHistory = orders[orderIndex].statusHistory || [];
+    if (newStatus !== oldStatus) {
+      statusHistory = [
+        ...statusHistory,
+        {
+          status: newStatus,
+          timestamp: timestamp
+        }
+      ];
+    }
+
     const updatedOrder = {
       ...orders[orderIndex],
       customerId: req.body.customerId,
       items: req.body.items,
-      status: req.body.status || orders[orderIndex].status,
+      status: newStatus,
       total: calculateTotal(req.body.items),
-      updatedAt: new Date().toISOString()
+      statusHistory: statusHistory,
+      updatedAt: timestamp
     };
 
     orders[orderIndex] = updatedOrder;

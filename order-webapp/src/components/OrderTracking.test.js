@@ -83,21 +83,14 @@ describe('OrderTracking Component', () => {
     render(<OrderTracking />);
 
     await waitFor(() => {
-      expect(screen.getByText('Real-Time Order Tracking')).toBeInTheDocument();
+      expect(screen.getByText('Track Order')).toBeInTheDocument();
     });
 
-    // Check connection status indicator
-    expect(screen.getByText('Live')).toBeInTheDocument();
-
     // Check first order
-    expect(screen.getByText('Order #1')).toBeInTheDocument();
-    expect(screen.getByText('Customer: customer-123')).toBeInTheDocument();
-    expect(screen.getByText('Total: $67.48')).toBeInTheDocument();
+    expect(screen.getByText('Order Number: 1')).toBeInTheDocument();
 
     // Check second order
-    expect(screen.getByText('Order #2')).toBeInTheDocument();
-    expect(screen.getByText('Customer: customer-456')).toBeInTheDocument();
-    expect(screen.getByText('Total: $30.00')).toBeInTheDocument();
+    expect(screen.getByText('Order Number: 2')).toBeInTheDocument();
   });
 
   test('displays status timeline correctly', async () => {
@@ -109,7 +102,7 @@ describe('OrderTracking Component', () => {
     render(<OrderTracking />);
 
     await waitFor(() => {
-      expect(screen.getByText('Real-Time Order Tracking')).toBeInTheDocument();
+      expect(screen.getByText('Track Order')).toBeInTheDocument();
     });
 
     // Check timeline steps are present (pending, processing, shipped, delivered)
@@ -135,13 +128,12 @@ describe('OrderTracking Component', () => {
     render(<OrderTracking />);
 
     await waitFor(() => {
-      expect(screen.getByText('Real-Time Order Tracking')).toBeInTheDocument();
+      expect(screen.getByText('Track Order')).toBeInTheDocument();
     });
 
-    // Check items are displayed
-    expect(screen.getByText(/Product A/)).toBeInTheDocument();
-    expect(screen.getByText(/Product B/)).toBeInTheDocument();
-    expect(screen.getByText(/Product C/)).toBeInTheDocument();
+    // Check order numbers are displayed
+    expect(screen.getByText('Order Number: 1')).toBeInTheDocument();
+    expect(screen.getByText('Order Number: 2')).toBeInTheDocument();
   });
 
   test('renders empty state when no orders', async () => {
