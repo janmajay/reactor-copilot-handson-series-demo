@@ -5,7 +5,6 @@ const OrderTracking = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const wsRef = useRef(null);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
@@ -57,7 +56,6 @@ const OrderTracking = () => {
 
       ws.onopen = () => {
         console.log('WebSocket connected');
-        setConnectionStatus('connected');
       };
 
       ws.onmessage = (event) => {
@@ -87,12 +85,10 @@ const OrderTracking = () => {
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
-        setConnectionStatus('error');
       };
 
       ws.onclose = () => {
         console.log('WebSocket disconnected');
-        setConnectionStatus('disconnected');
         
         // Reconnect after 3 seconds
         setTimeout(() => {
