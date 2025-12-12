@@ -11,7 +11,13 @@ const OrderTracking = () => {
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
   const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8000';
 
-  const statusOrder = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+  const statusOrder = ['pending', 'processing', 'shipped', 'delivered'];
+
+  const getStatusTimestamp = (order, status) => {
+    if (!order.statusHistory) return null;
+    const historyItem = order.statusHistory.find(h => h.status === status);
+    return historyItem ? historyItem.timestamp : null;
+  };
 
   const getStatusProgress = (status) => {
     const index = statusOrder.indexOf(status);
@@ -125,32 +131,16 @@ const OrderTracking = () => {
   return (
     <div className="order-tracking-container">
       <div className="order-tracking-header">
-        <h2>Real-Time Order Tracking</h2>
-        <div className="connection-status">
-          <span className={`status-indicator ${connectionStatus}`}></span>
-          <span className="status-text">
-            {connectionStatus === 'connected' ? 'Live' : 
-             connectionStatus === 'error' ? 'Connection Error' : 'Connecting...'}
-          </span>
-        </div>
+        <h2>Track Order</h2>
       </div>
       
       {orders.length === 0 ? (
         <div className="no-orders">No orders to track.</div>
       ) : (
         <div className="orders-tracking-list">
-          {orders.map((order) => (
+          {[...orders].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).map((order) => (
             <div key={order.id} className="order-tracking-card">
-              <div className="order-header">
-                <div className="order-info">
-                  <h3>Order #{order.id}</h3>
-                  <p className="customer-id">Customer: {order.customerId}</p>
-                  <p className="order-total">Total: ${order.total.toFixed(2)}</p>
-                </div>
-                <div className={`status-badge status-${order.status}`}>
-                  {order.status}
-                </div>
-              </div>
+              <h3 className="order-number-title">Order Number: {order.id}</h3>
               
               <div className="order-timeline">
                 {order.status === 'cancelled' ? (
@@ -162,20 +152,33 @@ const OrderTracking = () => {
                   </div>
                 ) : (
                   <div className="timeline-steps">
-                    {statusOrder.slice(0, 4).map((status, index) => {
+                    {statusOrder.map((status, index) => {
                       const currentProgress = getStatusProgress(order.status);
                       const isCompleted = index <= currentProgress;
                       const isCurrent = index === currentProgress;
+                      const timestamp = getStatusTimestamp(order, status);
                       
                       return (
                         <React.Fragment key={`${order.id}-${status}-${index}`}>
                           <div className={`timeline-step ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`}>
                             <div className="step-icon">
-                              {isCompleted ? '✓' : index + 1}
+                              {isCompleted ? '✓' : ''}
                             </div>
                             <div className="step-label">{status}</div>
+                            {timestamp && (
+                              <div className="step-timestamp">
+                                {new Date(timestamp).toLocaleString('en-US', {
+                                  month: 'long',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                  hour12: true
+                                })}
+                              </div>
+                            )}
                           </div>
-                          {index < 3 && (
+                          {index < statusOrder.length - 1 && (
                             <div className={`timeline-connector ${isCompleted && index < currentProgress ? 'completed' : ''}`}></div>
                           )}
                         </React.Fragment>
@@ -183,22 +186,6 @@ const OrderTracking = () => {
                     })}
                   </div>
                 )}
-              </div>
-              
-              <div className="order-items">
-                <h4>Items:</h4>
-                <ul>
-                  {order.items.map((item, index) => (
-                    <li key={index}>
-                      {item.name} - Qty: {item.quantity} @ ${item.price.toFixed(2)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              <div className="order-timestamps">
-                <small>Created: {new Date(order.createdAt).toLocaleString()}</small>
-                <small>Updated: {new Date(order.updatedAt).toLocaleString()}</small>
               </div>
             </div>
           ))}

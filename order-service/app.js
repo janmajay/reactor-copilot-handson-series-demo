@@ -84,14 +84,23 @@ app.post('/orders', (req, res) => {
       });
     }
 
+    const initialStatus = req.body.status || 'pending';
+    const timestamp = new Date().toISOString();
+    
     const order = {
       id: nextOrderId++,
       customerId: req.body.customerId,
       items: req.body.items,
-      status: req.body.status || 'pending',
+      status: initialStatus,
       total: calculateTotal(req.body.items),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      statusHistory: [
+        {
+          status: initialStatus,
+          timestamp: timestamp
+        }
+      ],
+      createdAt: timestamp,
+      updatedAt: timestamp
     };
 
     orders.push(order);
@@ -176,13 +185,30 @@ app.put('/orders/:id', (req, res) => {
       });
     }
 
+    const timestamp = new Date().toISOString();
+    const newStatus = req.body.status || orders[orderIndex].status;
+    const oldStatus = orders[orderIndex].status;
+    
+    // Update status history if status changed
+    let statusHistory = orders[orderIndex].statusHistory || [];
+    if (newStatus !== oldStatus) {
+      statusHistory = [
+        ...statusHistory,
+        {
+          status: newStatus,
+          timestamp: timestamp
+        }
+      ];
+    }
+
     const updatedOrder = {
       ...orders[orderIndex],
       customerId: req.body.customerId,
       items: req.body.items,
-      status: req.body.status || orders[orderIndex].status,
+      status: newStatus,
       total: calculateTotal(req.body.items),
-      updatedAt: new Date().toISOString()
+      statusHistory: statusHistory,
+      updatedAt: timestamp
     };
 
     orders[orderIndex] = updatedOrder;

@@ -221,6 +221,56 @@ describe('Order Management API', () => {
       expect(response.body.updatedAt).not.toBe(response.body.createdAt);
     });
 
+    it('should track status history when status changes', async () => {
+      // Update status to processing
+      const updateData1 = {
+        customerId: 'customer-123',
+        items: [{ name: 'Product A', quantity: 1, price: 10.00 }],
+        status: 'processing'
+      };
+
+      const response1 = await request(app)
+        .put(`/orders/${orderId}`)
+        .send(updateData1)
+        .expect(200);
+
+      expect(response1.body.statusHistory).toHaveLength(2);
+      expect(response1.body.statusHistory[0].status).toBe('pending');
+      expect(response1.body.statusHistory[1].status).toBe('processing');
+      expect(response1.body.statusHistory[1].timestamp).toBeDefined();
+
+      // Update status to shipped
+      const updateData2 = {
+        customerId: 'customer-123',
+        items: [{ name: 'Product A', quantity: 1, price: 10.00 }],
+        status: 'shipped'
+      };
+
+      const response2 = await request(app)
+        .put(`/orders/${orderId}`)
+        .send(updateData2)
+        .expect(200);
+
+      expect(response2.body.statusHistory).toHaveLength(3);
+      expect(response2.body.statusHistory[2].status).toBe('shipped');
+    });
+
+    it('should not duplicate status history if status does not change', async () => {
+      const updateData = {
+        customerId: 'customer-updated',
+        items: [{ name: 'Product A', quantity: 1, price: 10.00 }],
+        status: 'pending'
+      };
+
+      const response = await request(app)
+        .put(`/orders/${orderId}`)
+        .send(updateData)
+        .expect(200);
+
+      expect(response.body.statusHistory).toHaveLength(1);
+      expect(response.body.statusHistory[0].status).toBe('pending');
+    });
+
     it('should return 404 for non-existent order', async () => {
       const updateData = {
         customerId: 'customer-456',
