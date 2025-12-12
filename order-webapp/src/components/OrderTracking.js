@@ -104,6 +104,7 @@ const OrderTracking = () => {
         wsRef.current.close();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_BASE_URL, WS_URL]);
 
   if (loading) {
@@ -167,7 +168,7 @@ const OrderTracking = () => {
                       const isCurrent = index === currentProgress;
                       
                       return (
-                        <React.Fragment key={status}>
+                        <React.Fragment key={`${order.id}-${status}-${index}`}>
                           <div className={`timeline-step ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`}>
                             <div className="step-icon">
                               {isCompleted ? '✓' : index + 1}
