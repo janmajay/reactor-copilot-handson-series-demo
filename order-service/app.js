@@ -11,6 +11,24 @@ app.use(express.json());
 let orders = [];
 let nextOrderId = 1;
 
+// WebSocket broadcast function (will be set by server.js)
+let broadcastFunction = null;
+
+const setWebSocketServer = (broadcast) => {
+  broadcastFunction = broadcast;
+};
+
+const notifyOrderUpdate = (order, action) => {
+  if (broadcastFunction) {
+    broadcastFunction({
+      type: 'ORDER_UPDATE',
+      action: action, // 'created', 'updated', 'deleted'
+      order: order,
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
 // Validation utilities
 const validateOrder = (order) => {
   const errors = [];
@@ -77,6 +95,7 @@ app.post('/orders', (req, res) => {
     };
 
     orders.push(order);
+    notifyOrderUpdate(order, 'created');
     res.status(201).json(order);
   } catch (error) {
     res.status(500).json({
@@ -167,6 +186,7 @@ app.put('/orders/:id', (req, res) => {
     };
 
     orders[orderIndex] = updatedOrder;
+    notifyOrderUpdate(updatedOrder, 'updated');
     res.json(updatedOrder);
   } catch (error) {
     res.status(500).json({
@@ -198,6 +218,7 @@ app.delete('/orders/:id', (req, res) => {
     }
 
     const deletedOrder = orders.splice(orderIndex, 1)[0];
+    notifyOrderUpdate(deletedOrder, 'deleted');
     res.json({
       message: 'Order deleted successfully',
       order: deletedOrder
@@ -215,4 +236,4 @@ app.get('/', (req, res) => {
 });
 
 // Export app and utilities for testing
-module.exports = { app, resetData };
+module.exports = { app, resetData, setWebSocketServer };
